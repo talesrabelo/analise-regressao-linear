@@ -1,4 +1,18 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+#         CÉLULA GERADORA DE ARQUIVOS PARA DEPLOYMENT NO STREAMLIT
+# =============================================================================
+#
+# Ao executar esta célula, os arquivos 'app.py' (atualizado com autoria e
+# novo título) e 'requirements.txt' serão criados e o download será
+# iniciado automaticamente.
+#
+# =============================================================================
 
+from google.colab import files
+
+# --- Conteúdo do arquivo app.py (com as novas alterações) ---
+app_py_code = """
 # -*- coding: utf-8 -*-
 # =============================================================================
 #         CALCULADORA DE REGRESSÃO LINEAR COM STREAMLIT
@@ -13,7 +27,15 @@ import io
 import base64
 
 # --- CONFIGURAÇÕES DA PÁGINA E ESTILOS ---
-st.set_page_config(layout="wide", page_title="Calculadora de Regressão Linear")
+st.set_page_config(layout="wide", page_title="Análise de Regressão Linear")
+
+# --- INFORMAÇÕES DO AUTOR E TÍTULO ---
+st.markdown("Elaborado por Tales Rabelo Freitas")
+st.markdown("LinkedIn: [https://www.linkedin.com/in/tales-rabelo-freitas-1a1466187/](https://www.linkedin.com/in/tales-rabelo-freitas-1a1466187/)")
+st.title("📊 Análise de Regressão Linear")
+st.markdown("Faça o upload de uma planilha Excel, selecione suas variáveis e obtenha uma análise de regressão completa.")
+
+
 sns.set_theme(style="whitegrid")
 plt.rcParams['figure.figsize'] = (10, 5)
 
@@ -59,10 +81,9 @@ def gerar_relatorio_html(y_var, x_vars, df_corr, fig, results_summary, equation,
     return html_content
 
 # --- INTERFACE DO STREAMLIT ---
-st.title("📊 Calculadora de Regressão Linear Múltipla")
-st.markdown("Faça o upload de uma planilha Excel, selecione suas variáveis e obtenha uma análise de regressão completa.")
 st.sidebar.header("Configurações da Análise")
 uploaded_file = st.sidebar.file_uploader("1. Escolha sua planilha Excel", type=["xlsx", "xls"])
+
 if uploaded_file:
     try:
         df = pd.read_excel(uploaded_file)
@@ -111,7 +132,7 @@ if uploaded_file:
                         st.dataframe(correlation_matrix.style.background_gradient(cmap='coolwarm').format("{:.2f}"))
                         st.header("2. Gráficos de Dispersão (Y vs. X)")
                         num_x_vars = len(x_vars_names)
-                        cols = st.columns(min(num_x_vars, 2)) 
+                        cols = st.columns(min(num_x_vars, 2))
                         for i, x_var in enumerate(x_vars_names):
                             fig, ax = plt.subplots()
                             sns.regplot(x=x_var, y=y_var_name, data=analysis_df, ax=ax, line_kws={"color": "red"}, scatter_kws={'alpha': 0.6})
@@ -141,3 +162,33 @@ if uploaded_file:
         st.error(f"Ocorreu um erro ao processar o arquivo: {e}")
 else:
     st.info("Aguardando o upload de um arquivo Excel para iniciar a análise.")
+"""
+
+# --- Conteúdo do arquivo requirements.txt ---
+requirements_txt_code = """
+streamlit
+pandas
+numpy
+statsmodels
+matplotlib
+seaborn
+openpyxl
+"""
+
+# --- Lógica para criar e baixar os arquivos ---
+try:
+    with open('app.py', 'w', encoding='utf-8') as f:
+        f.write(app_py_code)
+    print("✅ Arquivo 'app.py' atualizado com sucesso no ambiente do Colab.")
+
+    with open('requirements.txt', 'w', encoding='utf-8') as f:
+        f.write(requirements_txt_code)
+    print("✅ Arquivo 'requirements.txt' criado com sucesso no ambiente do Colab.")
+
+    print("\\nIniciando o download dos arquivos...")
+    files.download('app.py')
+    files.download('requirements.txt')
+    print("\\n🚀 Download concluído! Agora você pode subir estes arquivos para o seu GitHub.")
+
+except Exception as e:
+    print(f"❌ Ocorreu um erro: {e}")
