@@ -1,20 +1,5 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-#         CÉLULA GERADORA DE ARQUIVOS PARA DEPLOYMENT NO STREAMLIT
-# =============================================================================
-#
-# Ao executar esta célula, os arquivos 'app.py' (atualizado com autoria e
-# novo título) e 'requirements.txt' serão criados e o download será
-# iniciado automaticamente.
-#
-# =============================================================================
-
-from google.colab import files
-
-# --- Conteúdo do arquivo app.py (com as novas alterações) ---
-app_py_code = """
-# -*- coding: utf-8 -*-
-# =============================================================================
 #         CALCULADORA DE REGRESSÃO LINEAR COM STREAMLIT
 # =============================================================================
 import streamlit as st
