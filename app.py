@@ -122,55 +122,18 @@ if uploaded_file:
                             ax.set_title(f'Relação entre {y_var_name} e {x_var}')
                             cols[i % 2].pyplot(fig)
 
-                        # --- 3. MODELAGEM E RESULTADOS (NOVA VERSÃO) ---
+                        # --- 3. MODELAGEM E RESULTADOS (VERSÃO HTML) ---
                         st.header("3. Resultados do Modelo de Regressão")
                         Y = analysis_df[y_var_name]
                         X = sm.add_constant(analysis_df[x_vars_names])
                         results = sm.OLS(Y, X).fit()
 
-                        # Extrai as tabelas do sumário
-                        summary_tables = results.summary().tables
-                        
-                        # --- Métricas Principais ---
-                        st.subheader("Métricas Gerais do Modelo")
-                        # Extrai os dados da primeira tabela (resumo do modelo)
-                        model_summary_data = summary_tables[0].data
-                        # Extrai os dados da terceira tabela (diagnósticos)
-                        diagnostics_data = summary_tables[2].data
+                        # Extrai o sumário completo como HTML
+                        summary_html = results.summary().as_html()
 
-                        # Combina os dados para exibição em colunas
-                        col1_data = {row[0].strip(): row[1].strip() for row in model_summary_data[:5]}
-                        col2_data = {row[2].strip(): row[3].strip() for row in model_summary_data[:5]}
-                        col3_data = {row[0].strip(): row[1].strip() for row in diagnostics_data[:4]}
-                        col4_data = {row[2].strip(): row[3].strip() for row in diagnostics_data[:2]}
+                        # Exibe o HTML dentro do Streamlit
+                        st.components.v1.html(summary_html, height=800, scrolling=True)
 
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.metric(label="R-quadrado Ajustado", value=f"{results.rsquared_adj:.3f}")
-                            st.metric(label="Nº de Observações", value=f"{int(results.nobs)}")
-                        with col2:
-                            st.metric(label="P-valor (F-statistic)", value=f"{results.f_pvalue:.3f}")
-                            st.metric(label="AIC", value=f"{results.aic:.2f}")
-
-                        # --- Tabela de Coeficientes ---
-                        st.subheader("Coeficientes da Regressão")
-                        coef_table = summary_tables[1]
-                        df_coef = pd.DataFrame(coef_table.data[1:], columns=coef_table.data[0])
-                        # Função para colorir p-valores significantes (<= 0.05)
-                        def highlight_significant(val):
-                            try:
-                                p_value = float(val)
-                                color = 'lightgreen' if p_value <= 0.05 else ''
-                                return f'background-color: {color}'
-                            except (ValueError, TypeError):
-                                return ''
-                        
-                        st.dataframe(df_coef.style.applymap(highlight_significant, subset=['P>|t|']), use_container_width=True)
-
-                        # --- Notas ---
-                        notes = summary_tables[2].data[4:] # Pega as notas do final da tabela de diagnósticos
-                        st.caption(" ".join([note[0] for note in notes]))
-                        
                         # --- 4. EQUAÇÃO DA REGRESSÃO ---
                         st.header("4. Equação da Regressão")
                         equation = f"{y_var_name} = {results.params['const']:.4f}"
