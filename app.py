@@ -130,40 +130,50 @@ if uploaded_file:
 
                         # --- Sumário do Modelo (com tratamento especial) ---
                         st.subheader("Sumário do Modelo")
-                        
-                        # Extrai os dados brutos da primeira tabela do sumário
                         model_summary_data = results.summary().tables[0].data
-
-                        # Cria dois DataFrames, um para cada lado da tabela
                         df_left = pd.DataFrame([row[:2] for row in model_summary_data], columns=["Métrica", "Valor"]).set_index("Métrica")
-                        df_right = pd.DataFrame([row[2:] for row in model_summary_data], columns=["Métrica", "Valor"]).set_index("Métrica")
                         
-                        # Remove o nome do índice para um visual mais limpo
+                        # Filtra linhas vazias na parte direita da tabela para evitar formatação estranha
+                        right_data = [row[2:] for row in model_summary_data if row[2].strip()]
+                        df_right = pd.DataFrame(right_data, columns=["Métrica", "Valor"]).set_index("Métrica")
+                        
                         df_left.index.name = None
                         df_right.index.name = None
-
-                        # Exibe os dois DataFrames lado a lado
+                        
                         col1, col2 = st.columns(2)
                         with col1:
                             st.table(df_left)
                         with col2:
                             st.table(df_right)
 
-                        # --- Coeficientes e Diagnósticos (usando o método anterior que já funciona) ---
+                        # --- Coeficientes (usando pd.read_html) ---
+                        st.subheader("Coeficientes")
                         summary_html = results.summary().as_html()
                         tabelas_sumario = pd.read_html(io.StringIO(summary_html), header=0, index_col=0)
-                        
-                        st.subheader("Coeficientes")
                         st.table(tabelas_sumario[1])
 
+                        # --- Testes de Diagnóstico (com tratamento especial) ---
                         st.subheader("Testes de Diagnóstico")
-                        st.table(tabelas_sumario[2])
+                        diagnostics_data = results.summary().tables[2].data
+                        
+                        # A tabela de diagnóstico tem 4 linhas de dados, o resto são notas
+                        diag_data_only = diagnostics_data[:4]
+                        
+                        df_diag_left = pd.DataFrame([row[:2] for row in diag_data_only], columns=["Métrica", "Valor"]).set_index("Métrica")
+                        df_diag_right = pd.DataFrame([row[2:] for row in diag_data_only], columns=["Métrica", "Valor"]).set_index("Métrica")
+                        
+                        df_diag_left.index.name = None
+                        df_diag_right.index.name = None
+                        
+                        col3, col4 = st.columns(2)
+                        with col3:
+                            st.table(df_diag_left)
+                        with col4:
+                            st.table(df_diag_right)
 
                         # Extrai e exibe as notas de rodapé
-                        notes = results.summary().tables[2].as_html()
-                        notes_df = pd.read_html(io.StringIO(notes), header=None, index_col=None)[0]
-                        st.caption("Notas: " + " ".join(notes_df.iloc[4:, 0].dropna()))
-
+                        notes = " ".join([row[0] for row in diagnostics_data[4:] if row[0].strip()])
+                        st.caption("Notas: " + notes)
 
                         # --- 4. EQUAÇÃO DA REGRESSÃO ---
                         st.header("4. Equação da Regressão")
