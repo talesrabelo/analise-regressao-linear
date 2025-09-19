@@ -86,12 +86,21 @@ if uploaded_file:
                     report_messages = []
                     selected_cols = [y_var_name] + x_vars_names
                     analysis_df = df[selected_cols].copy()
+                    
+                    # NOVO PASSO: Converte colunas para numérico, tratando erros.
+                    # Textos ou espaços que não podem ser convertidos virarão 'NaN' (Not a Number).
+                    for col in selected_cols:
+                        analysis_df[col] = pd.to_numeric(analysis_df[col], errors='coerce')
+
+                    # O passo .dropna() a seguir irá remover tanto os nulos originais quanto os que foram criados no passo acima.
                     initial_rows = len(analysis_df)
                     analysis_df.dropna(inplace=True)
+                    
                     if len(analysis_df) < initial_rows:
-                        msg = f"Aviso: {initial_rows - len(analysis_df)} linha(s) com dados ausentes foram removidas."
+                        msg = f"Aviso: {initial_rows - len(analysis_df)} linha(s) com dados ausentes ou não-numéricos foram removidas."
                         st.info(msg)
                         report_messages.append(msg)
+                        
                     if remove_outliers:
                         rows_before = len(analysis_df)
                         outlier_indices = set()
@@ -122,64 +131,55 @@ if uploaded_file:
                             ax.set_title(f'Relação entre {y_var_name} e {x_var}')
                             cols[i % 2].pyplot(fig)
 
-                        # --- 3. MODELAGEM E RESULTADOS (MÉTODO PANDAS.READ_HTML) ---
+                        # --- 3. MODELAGEM E RESULTADOS ---
                         st.header("3. Resultados do Modelo de Regressão")
                         Y = analysis_df[y_var_name]
                         X = sm.add_constant(analysis_df[x_vars_names])
                         results = sm.OLS(Y, X).fit()
 
-                        # --- Sumário do Modelo (com tratamento especial) ---
+                        # --- Sumário do Modelo ---
                         st.subheader("Sumário do Modelo")
-                        model_summary_data = results.summary().tables[0].data
-                        df_left = pd.DataFrame([row[:2] for row in model_summary_data], columns=["Métrica", "Valor"]).set_index("Métrica")
-                        
-                        # Filtra linhas vazias na parte direita da tabela para evitar formatação estranha
-                        right_data = [row[2:] for row in model_summary_data if row[2].strip()]
+                        summary_tables = results.summary().tables
+                        model_summary_data = summary_tables[0].data
+                        left_data = [row[:2] for row in model_summary_data]
+                        right_data = [row[2:] for row in model_summary_data]
+                        num_rows = max(len(left_data), len(right_data))
+                        while len(left_data) < num_rows: left_data.append(['', ''])
+                        while len(right_data) < num_rows: right_data.append(['', ''])
+                        df_left = pd.DataFrame(left_data, columns=["Métrica", "Valor"]).set_index("Métrica")
                         df_right = pd.DataFrame(right_data, columns=["Métrica", "Valor"]).set_index("Métrica")
-                        
                         df_left.index.name = None
                         df_right.index.name = None
-                        
                         col1, col2 = st.columns(2)
-                        with col1:
-                            st.table(df_left)
-                        with col2:
-                            st.table(df_right)
+                        with col1: st.table(df_left)
+                        with col2: st.table(df_right)
 
-                        # --- Coeficientes (usando pd.read_html) ---
+                        # --- Coeficientes ---
                         st.subheader("Coeficientes")
-                        summary_html = results.summary().as_html()
-                        tabelas_sumario = pd.read_html(io.StringIO(summary_html), header=0, index_col=0)
-                        st.table(tabelas_sumario[1])
+                        coef_html = summary_tables[1].as_html()
+                        df_coef = pd.read_html(io.StringIO(coef_html), header=0, index_col=0)[0]
+                        st.table(df_coef)
 
-                        # --- Testes de Diagnóstico (com tratamento especial) ---
+                        # --- Testes de Diagnóstico ---
                         st.subheader("Testes de Diagnóstico")
-                        diagnostics_data = results.summary().tables[2].data
-                        
-                        # A tabela de diagnóstico tem 4 linhas de dados, o resto são notas
+                        diagnostics_data = summary_tables[2].data
                         diag_data_only = diagnostics_data[:4]
-                        
                         df_diag_left = pd.DataFrame([row[:2] for row in diag_data_only], columns=["Métrica", "Valor"]).set_index("Métrica")
                         df_diag_right = pd.DataFrame([row[2:] for row in diag_data_only], columns=["Métrica", "Valor"]).set_index("Métrica")
-                        
                         df_diag_left.index.name = None
                         df_diag_right.index.name = None
-                        
                         col3, col4 = st.columns(2)
-                        with col3:
-                            st.table(df_diag_left)
-                        with col4:
-                            st.table(df_diag_right)
+                        with col3: st.table(df_diag_left)
+                        with col4: st.table(df_diag_right)
 
-                        # Extrai e exibe as notas de rodapé
+                        # --- Notas ---
                         notes = " ".join([row[0] for row in diagnostics_data[4:] if row[0].strip()])
                         st.caption("Notas: " + notes)
 
                         # --- 4. EQUAÇÃO DA REGRESSÃO ---
                         st.header("4. Equação da Regressão")
                         equation = f"{y_var_name} = {results.params['const']:.4f}"
-                        for var in x_vars_names:
-                            equation += f" + ({results.params[var]:.4f} * {var})"
+                        for var in x_vars_names: equation += f" + ({results.params[var]:.4f} * {var})"
                         equation_clean = equation.replace("+ (-", "- (")
                         st.code(equation_clean, language='text')
 
