@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-#         CALCULADORA DE REGRESSÃO LINEAR COM STREAMLIT
+#         ANÁLISE DE REGRESSÃO LINEAR COM STREAMLIT
 # =============================================================================
 import streamlit as st
 import pandas as pd
@@ -19,7 +19,6 @@ st.markdown("Elaborado por Tales Rabelo Freitas")
 st.markdown("LinkedIn: [https://www.linkedin.com/in/tales-rabelo-freitas-1a1466187/](https://www.linkedin.com/in/tales-rabelo-freitas-1a1466187/)")
 st.title("📊 Análise de Regressão Linear")
 st.markdown("Faça o upload de uma planilha Excel, selecione suas variáveis e obtenha uma análise de regressão completa.")
-
 
 sns.set_theme(style="whitegrid")
 plt.rcParams['figure.figsize'] = (10, 5)
@@ -147,33 +146,3 @@ if uploaded_file:
         st.error(f"Ocorreu um erro ao processar o arquivo: {e}")
 else:
     st.info("Aguardando o upload de um arquivo Excel para iniciar a análise.")
-"""
-
-# --- Conteúdo do arquivo requirements.txt ---
-requirements_txt_code = """
-streamlit
-pandas
-numpy
-statsmodels
-matplotlib
-seaborn
-openpyxl
-"""
-
-# --- Lógica para criar e baixar os arquivos ---
-try:
-    with open('app.py', 'w', encoding='utf-8') as f:
-        f.write(app_py_code)
-    print("✅ Arquivo 'app.py' atualizado com sucesso no ambiente do Colab.")
-
-    with open('requirements.txt', 'w', encoding='utf-8') as f:
-        f.write(requirements_txt_code)
-    print("✅ Arquivo 'requirements.txt' criado com sucesso no ambiente do Colab.")
-
-    print("\\nIniciando o download dos arquivos...")
-    files.download('app.py')
-    files.download('requirements.txt')
-    print("\\n🚀 Download concluído! Agora você pode subir estes arquivos para o seu GitHub.")
-
-except Exception as e:
-    print(f"❌ Ocorreu um erro: {e}")
