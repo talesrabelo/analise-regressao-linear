@@ -122,17 +122,34 @@ if uploaded_file:
                             ax.set_title(f'Relação entre {y_var_name} e {x_var}')
                             cols[i % 2].pyplot(fig)
 
-                        # --- 3. MODELAGEM E RESULTADOS (VERSÃO HTML) ---
+                        # --- 3. MODELAGEM E RESULTADOS (MÉTODO PANDAS.READ_HTML) ---
                         st.header("3. Resultados do Modelo de Regressão")
                         Y = analysis_df[y_var_name]
                         X = sm.add_constant(analysis_df[x_vars_names])
                         results = sm.OLS(Y, X).fit()
 
-                        # Extrai o sumário completo como HTML
+                        # Usa pandas para ler as tabelas do sumário HTML do statsmodels
                         summary_html = results.summary().as_html()
+                        # O io.StringIO é necessário para o read_html tratar a string como um arquivo
+                        tabelas_sumario = pd.read_html(io.StringIO(summary_html), header=0, index_col=0)
 
-                        # Exibe o HTML dentro do Streamlit
-                        st.components.v1.html(summary_html, height=800, scrolling=True)
+                        # A primeira tabela contém o sumário do modelo
+                        st.subheader("Sumário do Modelo")
+                        st.table(tabelas_sumario[0])
+
+                        # A segunda tabela contém os coeficientes
+                        st.subheader("Coeficientes")
+                        st.table(tabelas_sumario[1])
+
+                        # A terceira tabela contém os testes de diagnóstico
+                        st.subheader("Testes de Diagnóstico")
+                        st.table(tabelas_sumario[2])
+
+                        # Extrai e exibe as notas de rodapé
+                        notes = results.summary().tables[2].as_html()
+                        notes_df = pd.read_html(io.StringIO(notes), header=None, index_col=None)[0]
+                        st.caption("Notas: " + " ".join(notes_df.iloc[4:, 0].dropna()))
+
 
                         # --- 4. EQUAÇÃO DA REGRESSÃO ---
                         st.header("4. Equação da Regressão")
