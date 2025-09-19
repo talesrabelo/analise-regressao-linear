@@ -128,20 +128,34 @@ if uploaded_file:
                         X = sm.add_constant(analysis_df[x_vars_names])
                         results = sm.OLS(Y, X).fit()
 
-                        # Usa pandas para ler as tabelas do sumário HTML do statsmodels
-                        summary_html = results.summary().as_html()
-                        # O io.StringIO é necessário para o read_html tratar a string como um arquivo
-                        tabelas_sumario = pd.read_html(io.StringIO(summary_html), header=0, index_col=0)
-
-                        # A primeira tabela contém o sumário do modelo
+                        # --- Sumário do Modelo (com tratamento especial) ---
                         st.subheader("Sumário do Modelo")
-                        st.table(tabelas_sumario[0])
+                        
+                        # Extrai os dados brutos da primeira tabela do sumário
+                        model_summary_data = results.summary().tables[0].data
 
-                        # A segunda tabela contém os coeficientes
+                        # Cria dois DataFrames, um para cada lado da tabela
+                        df_left = pd.DataFrame([row[:2] for row in model_summary_data], columns=["Métrica", "Valor"]).set_index("Métrica")
+                        df_right = pd.DataFrame([row[2:] for row in model_summary_data], columns=["Métrica", "Valor"]).set_index("Métrica")
+                        
+                        # Remove o nome do índice para um visual mais limpo
+                        df_left.index.name = None
+                        df_right.index.name = None
+
+                        # Exibe os dois DataFrames lado a lado
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.table(df_left)
+                        with col2:
+                            st.table(df_right)
+
+                        # --- Coeficientes e Diagnósticos (usando o método anterior que já funciona) ---
+                        summary_html = results.summary().as_html()
+                        tabelas_sumario = pd.read_html(io.StringIO(summary_html), header=0, index_col=0)
+                        
                         st.subheader("Coeficientes")
                         st.table(tabelas_sumario[1])
 
-                        # A terceira tabela contém os testes de diagnóstico
                         st.subheader("Testes de Diagnóstico")
                         st.table(tabelas_sumario[2])
 
