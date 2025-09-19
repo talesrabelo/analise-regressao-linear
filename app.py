@@ -14,11 +14,13 @@ import base64
 # --- CONFIGURAÇÕES DA PÁGINA E ESTILOS ---
 st.set_page_config(layout="wide", page_title="Análise de Regressão Linear")
 
-# --- INFORMAÇÕES DO AUTOR E TÍTULO ---
-st.markdown("Elaborado por Tales Rabelo Freitas")
-st.markdown("LinkedIn: [https://www.linkedin.com/in/tales-rabelo-freitas-1a1466187/](https://www.linkedin.com/in/tales-rabelo-freitas-1a1466187/)")
+# --- TÍTULO E INFORMAÇÕES DO AUTOR ---
 st.title("📊 Análise de Regressão Linear")
 st.markdown("Faça o upload de uma planilha Excel, selecione suas variáveis e obtenha uma análise de regressão completa.")
+
+# Créditos posicionados abaixo do título
+st.caption("Elaborado por Tales Rabelo Freitas | LinkedIn: [https://www.linkedin.com/in/tales-rabelo-freitas-1a1466187/](https://www.linkedin.com/in/tales-rabelo-freitas-1a1466187/)")
+
 
 sns.set_theme(style="whitegrid")
 plt.rcParams['figure.figsize'] = (10, 5)
